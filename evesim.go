@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	remainingChildren := map[string]int{
+	remainingChildren := map[string]int64{
 		"Eve":      1,
 		"Deborah":  1,
 		"Sue":      1,
@@ -19,22 +19,25 @@ func main() {
 		"Isabella": 1,
 	}
 
-	ng := 100     // number of generations
-	maxGirls := 4 // maximum number of children per generation
+	ng := 4000      // number of generations
+	maxGirls := 3.7 // maximum number of children per generation
 
-	for i := 0; i < ng; i++ {
+	var winner bool
+	for i := 0; i < ng && !winner; i++ {
 		for geneticLine, children := range remainingChildren {
-			remainingChildren[geneticLine] = 0 // all mothers will die
-			for _ = children; children > 0; children-- {
-				remainingChildren[geneticLine] += rand.Intn(maxGirls)
+			avgChildren := float64(maxGirls) * rand.Float64()
+			remainingChildren[geneticLine] = int64(avgChildren * float64(children))
+			if remainingChildren[geneticLine] >= 1000000000 {
+				fmt.Printf("%s wins with %d children in %d generations.\n", geneticLine, remainingChildren[geneticLine], i)
+				winner = true
 			}
-			//fmt.Printf("%s had %d children\n", geneticLine, remainingChildren[geneticLine])
 		}
-		if (i % 10) == 0 {
-			fmt.Printf("%+v\n", remainingChildren)
-		}
-
 	}
-	fmt.Printf("%+v\n", remainingChildren)
-
+	var total int64
+	for _, children := range remainingChildren {
+		total += children
+	}
+	for geneticLine, children := range remainingChildren {
+		fmt.Printf("%s: %d (%0.2f%%)\n", geneticLine, children, float64(children)/float64(total)*100)
+	}
 }
