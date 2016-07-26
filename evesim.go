@@ -6,27 +6,20 @@ import (
 )
 
 type result struct {
-	children map[string]int64
+	children []int64
 	total    int64
 	maximum  int64
 }
 
-func evesim() map[string]int64 {
-	remainingChildren := map[string]int64{
-		"Eve":      1,
-		"Deborah":  1,
-		"Sue":      1,
-		"Jane":     1,
-		"Suzie":    1,
-		"Sophia":   1,
-		"Emma":     1,
-		"Olivia":   1,
-		"Ava":      1,
-		"Isabella": 1,
-	}
+func evesim() []int64 {
+	initialPopulation := 1000 // number of initial lines
+	ng := 4000                // number of generations
+	maxGirls := 5.1           // maximum number of children per generation
 
-	ng := 4000      // number of generations
-	maxGirls := 3.5 // maximum number of children per generation
+	remainingChildren := make([]int64, initialPopulation)
+	for i := range remainingChildren {
+		remainingChildren[i] = 1
+	}
 
 	var winner bool
 	for i := 0; i < ng && !winner; i++ {
@@ -42,7 +35,7 @@ func evesim() map[string]int64 {
 	return remainingChildren
 }
 
-func total(r map[string]int64) int64 {
+func total(r []int64) int64 {
 	var total int64
 	for _, children := range r {
 		total += children
@@ -50,7 +43,7 @@ func total(r map[string]int64) int64 {
 	return total
 }
 
-func maximum(r map[string]int64) int64 {
+func maximum(r []int64) int64 {
 	var max int64
 	for _, children := range r {
 		if children > max {
