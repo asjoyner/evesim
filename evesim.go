@@ -6,80 +6,79 @@ import (
 )
 
 type result struct {
-	children []int64
-	total    int64
-	maximum  int64
+	lines       []int64
+	total       int64
+	maximum     int64
+	generations int
 }
 
-func evesim() []int64 {
-	initialPopulation := 1000 // number of initial lines
-	ng := 4000                // number of generations
-	maxGirls := 5.1           // maximum number of children per generation
+func evesim() result {
+	var r result
+	initialPopulation := 100 // number of initial lines
+	ng := 4000               // number of generations
+	maxGirls := 2.5          // maximum number of children per generation
 
-	remainingChildren := make([]int64, initialPopulation)
-	for i := range remainingChildren {
-		remainingChildren[i] = 1
+	r.lines = make([]int64, initialPopulation)
+	for i := range r.lines {
+		r.lines[i] = 1
 	}
 
+	// Simulate as many generation as is takes for one lineage to get to 1
+	// trillion children.  Running too many generations results in overflowing an
+	// int64.  :)
 	var winner bool
 	for i := 0; i < ng && !winner; i++ {
-		for lineage, children := range remainingChildren {
+		for lineage, children := range r.lines {
 			avgChildren := float64(maxGirls) * rand.Float64()
-			remainingChildren[lineage] = int64(avgChildren * float64(children))
-			if remainingChildren[lineage] >= 1000000000 {
-				//fmt.Printf("%s wins with %d children in %d generations.\n", lineage, remainingChildren[lineage], i)
+			r.lines[lineage] = int64(avgChildren * float64(children))
+			if r.lines[lineage] >= 10000000000 {
 				winner = true
+				r.generations = i
 			}
 		}
 	}
-	return remainingChildren
-}
 
-func total(r []int64) int64 {
-	var total int64
-	for _, children := range r {
-		total += children
-	}
-	return total
-}
-
-func maximum(r []int64) int64 {
-	var max int64
-	for _, children := range r {
-		if children > max {
-			max = children
+	// calculate some aggregate statistics about this result
+	for _, children := range r.lines {
+		r.total += children
+		if children > r.maximum {
+			r.maximum = children
 		}
 	}
-	return max
+	return r
 }
 
 func main() {
 	numSims := 1000
 	results := make([]result, numSims)
 	for i := 0; i < numSims; i++ {
-		r := evesim()
-		results[i] = result{
-			children: r,
-			total:    total(r),
-			maximum:  maximum(r),
-		}
+		results[i] = evesim()
 	}
 
 	var failed int
+	var generations int
+	var maxGeneration int
 	for _, r := range results {
 		if r.maximum == 0 {
 			failed++
+		}
+		generations += r.generations
+		if r.generations > maxGeneration {
+			maxGeneration = r.generations
 		}
 	}
 	if failed > 0 {
 		f := float64(failed) / float64(numSims) * 100
 		fmt.Printf("%2.0f%% of the populations died out.\n", f)
 	}
+	g := float64(generations) / float64(numSims)
+	fmt.Printf("Averaged %f generations.\n", g)
+	fmt.Printf("Last generation: %d.\n", maxGeneration)
 
 	for _, threshold := range []float64{0.01, 0.2, 0.5} {
 		var passing int
 		for _, r := range results {
-			for _, children := range r.children {
+			for _, children := range r.lines {
 				if children == r.maximum {
 					continue // skip the winner
 				}
