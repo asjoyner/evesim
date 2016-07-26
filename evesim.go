@@ -26,7 +26,7 @@ func evesim() map[string]int64 {
 	}
 
 	ng := 4000      // number of generations
-	maxGirls := 3.7 // maximum number of children per generation
+	maxGirls := 3.5 // maximum number of children per generation
 
 	var winner bool
 	for i := 0; i < ng && !winner; i++ {
@@ -70,6 +70,17 @@ func main() {
 			total:    total(r),
 			maximum:  maximum(r),
 		}
+	}
+
+	var failed int
+	for _, r := range results {
+		if r.maximum == 0 {
+			failed++
+		}
+	}
+	if failed > 0 {
+		f := float64(failed) / float64(numSims) * 100
+		fmt.Printf("%2.0f%% of the populations died out.\n", f)
 	}
 
 	for _, threshold := range []float64{0.01, 0.2, 0.5} {
